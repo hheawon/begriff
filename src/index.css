@@ -1,0 +1,91 @@
+/*
+  베그리프 디자인 토큰 — 출처: 디자인 가이드.pdf (v0.1)
+  모든 화면은 여기 등록된 값만 쓴다. 가이드에 없는 값은 팀에 먼저 묻는다.
+*/
+@import "tailwindcss";
+
+@theme {
+  /* 1. 기본 색상 */
+  --color-paper: #faf8f3;        /* 바탕 */
+  --color-surface: #ffffff;      /* 카드 */
+  --color-line: #e5e0d6;         /* 구분선 · 탭 트랙 */
+  --color-ink: #1f1d1a;          /* 본문 글자 */
+  --color-ink-2: #4a463f;        /* 보조 글자 */
+  --color-ink-3: #6e685e;        /* 설명 · 라벨 */
+  --color-brand: #2a3f66;        /* 버튼 · 탭 */
+  --color-brand-hover: #1f3052;
+  --color-brand-soft: #e7ecf4;   /* 선택 배경 · 그 밖의 원어 중립색 */
+
+  /* 2. 원어별 하이라이트 (색 + 밑줄 + 도형을 함께 바꾼다) */
+  --color-tz-bg: #dce8f8;        /* transzendental · 실선 3px · 사각형 */
+  --color-tz-text: #1d4e89;
+  --color-tz-line: #2f6db5;
+  --color-ap-bg: #fde7d3;        /* a priori · 이중선 3px · 원 */
+  --color-ap-text: #8a3b0b;
+  --color-ap-line: #d9782c;
+  --color-tt-bg: #f1e0f3;        /* transzendent · 물결선 2px · 삼각형 */
+  --color-tt-text: #6b2c73;
+  --color-tt-line: #9a4aa3;
+  --color-pend-bg: #ece9e3;      /* 판정 보류 · 점선 3px · 점선 원 */
+  --color-pend-text: #55524c;
+  --color-pend-line: #8f8a80;
+
+  /* 3. 핵심 경고 색 */
+  --color-warn-bg: #1e2638;
+  --color-warn-text: #f6f1e6;
+  --color-warn-accent: #f2c14e;
+
+  /* 4. 글꼴 */
+  --font-sans: "IBM Plex Sans KR", system-ui, sans-serif;  /* UI · 버튼 · 표 · 라벨 */
+  --font-read: "Noto Serif KR", serif;                     /* 번역 문장 본문 · 해설 */
+  --font-de: "EB Garamond", serif;                         /* 독일어 원어 (항상 이탤릭) */
+
+  /* 5. 그림자 — 한 가지만. 펼쳐진 대조 카드에만 쓴다 */
+  --shadow-card: 0 1px 2px rgb(31 29 26 / 0.06), 0 8px 24px rgb(31 29 26 / 0.07);
+}
+
+/*
+  4. 글자 크기 — 클래스 하나가 모바일(기본)과 데스크톱(md, 768px 이상) 크기를 함께 맡는다.
+  프로젝터 기준: 14px 미만 글자는 쓰지 않는다.
+*/
+@utility text-display {           /* 앱 이름 */
+  font-size: 24px; font-weight: 700; line-height: 1.2;
+  @media (width >= 48rem) { font-size: 32px; }
+}
+@utility text-h2 {                /* 섹션 제목 */
+  font-size: 20px; font-weight: 700; line-height: 1.35;
+  @media (width >= 48rem) { font-size: 24px; }
+}
+@utility text-reading {           /* 분석 대상 문장 (font-read와 함께) */
+  font-size: 20px; font-weight: 400; line-height: 2.1;
+  @media (width >= 48rem) { font-size: 26px; }
+}
+@utility text-term {              /* 대조 카드 원어 (font-de와 함께) */
+  font-size: 38px; font-weight: 500; font-style: italic; line-height: 1.1;
+  @media (width >= 48rem) { font-size: 52px; }
+}
+@utility text-body {              /* 해설 · 일반 본문 */
+  font-size: 16px; font-weight: 400; line-height: 1.7;
+  @media (width >= 48rem) { font-size: 18px; }
+}
+@utility text-badge {             /* 판정 배지 (원어는 +2px) */
+  font-size: 14px; font-weight: 600; line-height: 1.4;
+  @media (width >= 48rem) { font-size: 16px; }
+}
+@utility text-label {             /* 라벨 · 표 머리 */
+  font-size: 14px; font-weight: 600; line-height: 1.4;
+  @media (width >= 48rem) { font-size: 15px; }
+}
+
+/* 독일어 원어: 항상 이탤릭 */
+@utility font-de {
+  font-family: var(--font-de);
+  font-style: italic;
+}
+
+@layer base {
+  body {
+    @apply bg-paper text-ink font-sans;
+    -webkit-font-smoothing: antialiased;
+  }
+}

@@ -1,0 +1,19 @@
+# 설치된 패키지 · 빌드 결과
+node_modules/
+dist/
+
+# 비밀 정보 (API 키) — 절대 올리지 않는다
+.env
+.env.*
+
+# Vercel 로컬 설정
+.vercel/
+
+# 공모전 서류 (개인정보 포함 가능, 앱 소스 아님)
+*.hwp
+2026학년도_*.pdf
+
+# 기타
+.DS_Store
+*.log
+.claude/settings.local.json
