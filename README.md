@@ -96,3 +96,59 @@ AI 판정 정확도를 재고 시연할 때 씁니다. 문장 하나가 `{ }` �
 
 지금은 형식 설명용 예시 1개만 들어 있습니다. 실제 문장으로 바꾸고 10~20개로 늘려 주세요.
 문장을 추가할 때는 `}` 뒤에 쉼표(`,`)를 넣고, 마지막 문장 뒤에는 쉼표를 넣지 않습니다.
+
+---
+
+## AI 문장 분석 API (`/api/analyze`)
+
+번역 문장을 보내면 용어 DB만 근거로 개념어를 찾고 원어를 판정해 JSON으로 돌려줍니다.
+
+| 파일 | 역할 |
+|---|---|
+| `api/analyze.js` | 주소 `/api/analyze`. 요청을 받아 입력을 검사하고 한국어 오류 메시지를 돌려줌 |
+| `server/analyze.js` | AI에게 줄 지시문·답 형식, AI 답 검사(위치 계산, 판정 보류, DB 근거 붙이기) |
+| `server/llm.js` | **AI(Gemini)를 부르는 유일한 파일.** 모델을 바꿀 때 이 파일만 고침 |
+
+### API 키 넣기 (키는 채팅·카톡·GitHub에 절대 올리지 마세요)
+
+1. **내 컴퓨터:** 프로젝트 폴더(`begriff`)에 `.env`라는 이름의 파일을 만들고 아래 한 줄을 적어 저장합니다.
+   ```
+   GEMINI_API_KEY=발급받은키
+   ```
+   `.env`는 `.gitignore`에 들어 있어서 GitHub에 올라가지 않습니다.
+2. **배포 사이트(Vercel):** Vercel 대시보드 → 프로젝트 → Settings → Environment Variables →
+   Key에 `GEMINI_API_KEY`, Value에 키 → Save → Deployments 탭에서 최신 배포 오른쪽 `⋯` → Redeploy.
+
+### 시험해 보기 (PowerShell)
+
+```powershell
+# 방법 1: 터미널에서 바로
+npm run try:analyze -- "모든 인식을 선험적이라고 부른다"
+
+# 방법 2: 개발 서버를 켠 상태(npm run dev)에서 다른 PowerShell 창으로
+Invoke-RestMethod -Method Post -Uri http://localhost:5173/api/analyze -ContentType "application/json; charset=utf-8" -Body ([Text.Encoding]::UTF8.GetBytes('{"문장":"모든 인식을 선험적이라고 부른다"}')) | ConvertTo-Json -Depth 6
+```
+
+### 결과 형식
+
+```json
+{
+  "문장": "...",
+  "개념어목록": [{
+    "단어": "선험적",
+    "위치": { "시작": 7, "끝": 10 },
+    "판정원어": "transzendental",
+    "확신도": "높음",
+    "판정보류": false,
+    "후보원어": ["a priori", "transzendental"],
+    "판정이유": "...",
+    "해설": "...",
+    "근거": [{ "원어": "transzendental", "역본": "...", "쪽수": "...", "원문위치": "B25" }]
+  }]
+}
+```
+
+- `위치`: 문장의 몇 번째 글자부터 몇 번째 글자 앞까지인지 (0부터 셈). 화면 하이라이트에 씀.
+- 확신도가 "낮음"이거나 AI가 후보가 아닌 원어를 고르면 `판정보류: true`, `판정원어: null`이 되고 `후보원어`를 보여 줍니다.
+- `근거`(역본·쪽수·원문위치)는 AI가 쓰지 않고 **용어 DB에서 그대로** 붙입니다. 그래서 출처를 지어낼 수 없습니다.
+- 문장은 500자까지. 오류일 때는 `{ "오류": "한국어 메시지" }`를 돌려줍니다.
