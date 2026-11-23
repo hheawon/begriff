@@ -9,7 +9,8 @@ const MSG_FALLBACK = '분석 결과를 받지 못했습니다. 잠시 후 다시
 
 export class AnalyzeError extends Error {}
 
-export async function requestAnalysis(문장) {
+// 역본: 사용자가 고른 역본 힌트 (없으면 null → 힌트 없이 분석)
+export async function requestAnalysis(문장, 역본 = null) {
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS)
 
@@ -17,7 +18,7 @@ export async function requestAnalysis(문장) {
     const response = await fetch('/api/analyze', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 문장 }),
+      body: JSON.stringify({ 문장, 역본 }),
       signal: controller.signal,
     })
 

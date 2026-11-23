@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import testSentences from '../../data/test-sentences.json'
-import { allTerms, josa } from '../lib/terms.js'
+import { allTerms, editionLabel, josa } from '../lib/terms.js'
 import { judgmentStyle } from '../lib/termStyles.js'
 import { AnalyzeError, requestAnalysis } from '../lib/analyzeApi.js'
-import AnalyzeForm from '../components/AnalyzeForm.jsx'
+import AnalyzeForm, { UNKNOWN_EDITION } from '../components/AnalyzeForm.jsx'
 import HighlightedSentence from '../components/HighlightedSentence.jsx'
 import JudgmentDetail, { WarningIcon } from '../components/JudgmentDetail.jsx'
 import TermMarker from '../components/TermMarker.jsx'
@@ -16,6 +16,7 @@ const EXAMPLES = testSentences.slice(0, 3).map((t) => t.문장)
 // onOpenDictionary(번역어): 개념어 사전 탭으로 가서 그 번역어를 검색
 export default function AnalyzePage({ onOpenDictionary }) {
   const [text, setText] = useState('')
+  const [edition, setEdition] = useState(UNKNOWN_EDITION) // 역본 힌트 ('모름' = 힌트 없음)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [result, setResult] = useState(null) // { 문장, 개념어목록 }
@@ -26,7 +27,7 @@ export default function AnalyzePage({ onOpenDictionary }) {
     setLoading(true)
     setError('')
     try {
-      const data = await requestAnalysis(text.trim())
+      const data = await requestAnalysis(text.trim(), edition === UNKNOWN_EDITION ? null : edition)
       setResult(data)
       setSelected(null)
       window.scrollTo({ top: 0 })
@@ -73,6 +74,11 @@ export default function AnalyzePage({ onOpenDictionary }) {
           loading={loading}
           error={error}
           examples={EXAMPLES}
+          edition={edition}
+          onEditionChange={(value) => {
+            setEdition(value)
+            setError('')
+          }}
         />
       </div>
     </section>
@@ -106,6 +112,7 @@ function AnalysisResult({ result, selected, onSelect, onClose, onBack, onOpenDic
           다른 문장 분석
         </button>
         <p className="text-label font-normal text-ink-2" aria-live="polite">
+          {result.역본 && <>역본 힌트 <strong className="font-semibold text-ink">{editionLabel(result.역본)}</strong> · </>}
           개념어 <strong className="font-semibold text-ink">{items.length}개</strong>
           {items.length > 0 && (
             <>
@@ -119,7 +126,7 @@ function AnalysisResult({ result, selected, onSelect, onClose, onBack, onOpenDic
 
       {active && (
         <div className="mt-4">
-          <JudgmentDetail ref={detailRef} item={active} onClose={onClose} onOpenDictionary={onOpenDictionary} />
+          <JudgmentDetail ref={detailRef} item={active} edition={result.역본} onClose={onClose} onOpenDictionary={onOpenDictionary} />
         </div>
       )}
 
@@ -229,6 +236,12 @@ function FoundTermRow({ item, active, onClick }) {
           <>
             {위치 && `원문 ${위치} · `}확신 {item.확신도}
           </>
+        )}
+        {item.역본불일치 && (
+          <span className="ml-2 inline-flex items-center gap-1 text-ap-text">
+            <WarningIcon className="text-ap-line" />
+            선택한 역본과 다름
+          </span>
         )}
       </span>
       <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`ml-auto shrink-0 text-ink-3 transition-transform ${active ? 'rotate-90' : ''}`}>

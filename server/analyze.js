@@ -25,6 +25,29 @@ for (const term of terms) {
 }
 const TRANSLATIONS = [...candidatesOf.keys()]
 
+// 역본 목록 (DB에 적힌 그대로). 사용자가 "이 문장은 이 역본에서 왔다"고 고를 수 있다.
+export const EDITIONS = [...new Set(terms.flatMap((t) => t.번역어목록.map((r) => r.역본)))].filter(Boolean)
+
+// 고른 역본에서 번역어 → 원어 목록. 예: 백종현 역에서 '선험적' → ['a priori']
+function mappingOf(역본) {
+  const map = new Map()
+  for (const term of terms) {
+    for (const row of term.번역어목록) {
+      if (row.역본 !== 역본) continue
+      const list = map.get(row.번역어) ?? []
+      if (!list.includes(term.원어)) list.push(term.원어)
+      map.set(row.번역어, list)
+    }
+  }
+  return map
+}
+
+// 역본 기준 원어: 그 역본에서 이 번역어가 원어 하나로만 옮겨질 때만 그 원어, 아니면 null
+function editionOriginOf(mapping, 단어) {
+  const list = mapping?.get(단어)
+  return list?.length === 1 ? list[0] : null
+}
+
 // 근거: (원어, 번역어)에 해당하는 DB 줄의 역본 + 원어의 원문위치. AI가 아니라 DB에서 그대로 가져온다.
 function evidenceFor(원어, 번역어) {
   const term = terms.find((t) => t.원어 === 원어)
@@ -49,7 +72,12 @@ const SYSTEM = `너는 칸트 『순수이성비판』 한국어 번역 문장�
 6. 해설: 판정한 원어의 DB "해설" 내용만 바탕으로 학부생이 이해하기 쉽게 한두 문장으로 쓴다. DB에 없는 설명을 덧붙이지 마라.
 7. 출처(역본·원문위치)는 쓰지 마라. 프로그램이 DB에서 직접 붙인다.
 8. 개념어가 하나도 없으면 빈 목록을 돌려준다.
-9. 같은 입력에는 언제나 같은 답을 하도록, 규칙에 따라 일관되게 판단하라.`
+9. 같은 입력에는 언제나 같은 답을 하도록, 규칙에 따라 일관되게 판단하라.
+10. [역본 힌트]가 주어지면: 그 역본에서 각 번역어가 어떤 원어로 옮겨지는지를 판단단서와 함께 강한 단서로 쓴다.
+    그래도 판정은 문맥을 보고 직접 내린다. 문맥과 판단단서가 역본 대응과 분명히 어긋나면 문맥을 따르고,
+    판정이유에 "역본 대응과 다르게 판정한 이유"를 적는다. 사용자가 역본을 잘못 골랐을 수 있기 때문이다.
+    이때 역본 대응 자체를 바꿔 말하지 마라. 예: 그 역본에서 '선험적' → a priori인데 문맥상 transzendental로 판정했다면,
+    "이 역본에서 '선험적'은 transzendental이다"라고 쓰지 말고 "이 역본에서는 보통 a priori지만 문맥상 transzendental로 보인다"처럼 쓴다.`
 
 const SCHEMA = {
   type: 'object',
@@ -72,11 +100,18 @@ const SCHEMA = {
   required: ['개념어목록'],
 }
 
-function buildPrompt(sentence) {
+function buildPrompt(sentence, 역본, mapping) {
+  const hint = 역본
+    ? `[역본 힌트]
+사용자가 이 문장이 "${역본}" 역본에서 왔다고 알려 주었다. 이 역본의 번역어 → 원어 대응(용어 DB 기준):
+${[...mapping].map(([번역어, 원어목록]) => `- ${번역어} → ${원어목록.join(', ')}`).join('\n')}
+
+`
+    : ''
   return `[용어 DB]
 ${JSON.stringify(terms, null, 1)}
 
-[분석할 문장]
+${hint}[분석할 문장]
 ${sentence}`
 }
 
@@ -93,9 +128,16 @@ function occurrences(sentence, word) {
 }
 
 // (테스트·정확도 평가에서도 쓰도록 export)
-export function finalize(sentence, aiItems) {
+// 역본: 사용자가 고른 역본 (없으면 null). 역본 기준 원어와 불일치 여부는 AI가 아니라 여기서 DB로 계산한다.
+export function finalize(sentence, aiItems, 역본 = null) {
   const taken = new Set() // 이미 배정된 시작 위치 (같은 단어가 두 번 나올 때 차례로 배정)
   const result = []
+  const mapping = 역본 ? mappingOf(역본) : null
+  // 역본 기준 원어와 AI 판정이 다르면 true (판정 보류면 비교하지 않음)
+  const editionFields = (단어, 판정원어) => {
+    const 역본기준원어 = editionOriginOf(mapping, 단어)
+    return { 역본기준원어, 역본불일치: Boolean(역본기준원어 && 판정원어 && 판정원어 !== 역본기준원어) }
+  }
 
   for (const item of aiItems ?? []) {
     const 단어 = String(item?.단어 ?? '').trim()
@@ -127,6 +169,7 @@ export function finalize(sentence, aiItems) {
       판정이유,
       해설: String(item.해설 ?? ''),
       근거: (판정보류 ? 후보원어 : [판정원어]).flatMap((o) => evidenceFor(o, 단어)),
+      ...editionFields(단어, 판정원어),
     })
   }
 
@@ -146,6 +189,7 @@ export function finalize(sentence, aiItems) {
         판정이유: 'AI가 이 단어를 판정하지 않아 보류합니다. 후보 원어를 확인하세요.',
         해설: '',
         근거: 후보원어.flatMap((o) => evidenceFor(o, 단어)),
+        ...editionFields(단어, null),
       })
     }
   }
@@ -165,8 +209,18 @@ export function validateSentence(input) {
   return sentence
 }
 
-export async function analyzeSentence(input) {
+// 역본 검사: 비어 있거나 "모름"이면 null(힌트 없음), DB에 없는 역본이면 InputError
+export function validateEdition(input) {
+  const 역본 = typeof input === 'string' ? input.trim() : ''
+  if (!역본 || 역본 === '모름') return null
+  if (!EDITIONS.includes(역본)) throw new InputError('알 수 없는 역본입니다. 목록에서 다시 골라 주세요.')
+  return 역본
+}
+
+export async function analyzeSentence(input, editionInput = null) {
   const 문장 = validateSentence(input)
-  const ai = await generateJson({ system: SYSTEM, prompt: buildPrompt(문장), schema: SCHEMA })
-  return { 문장, 개념어목록: finalize(문장, ai?.개념어목록) }
+  const 역본 = validateEdition(editionInput)
+  const prompt = buildPrompt(문장, 역본, 역본 ? mappingOf(역본) : null)
+  const ai = await generateJson({ system: SYSTEM, prompt, schema: SCHEMA })
+  return { 문장, 역본, 개념어목록: finalize(문장, ai?.개념어목록, 역본) }
 }

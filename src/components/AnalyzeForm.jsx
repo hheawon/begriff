@@ -1,4 +1,7 @@
+import { EDITIONS, editionLabel } from '../lib/terms.js'
 import { WarningIcon } from './JudgmentDetail.jsx'
+
+export const UNKNOWN_EDITION = '모름'
 
 export const MAX_LENGTH = 500 // 서버(server/analyze.js)와 같은 글자 수 제한
 
@@ -8,7 +11,8 @@ export function countChars(text) {
 }
 
 // 문장 입력 카드 + 예시 문장 (디자인 가이드 시안 2·6쪽)
-export default function AnalyzeForm({ value, onChange, onSubmit, loading, error, examples }) {
+// edition: 고른 역본 힌트 ('모름'이면 힌트 없음)
+export default function AnalyzeForm({ value, onChange, onSubmit, loading, error, examples, edition = UNKNOWN_EDITION, onEditionChange = () => {} }) {
   const length = countChars(value)
   const tooLong = length > MAX_LENGTH
   const canSubmit = length > 0 && !tooLong && !loading
@@ -49,6 +53,7 @@ export default function AnalyzeForm({ value, onChange, onSubmit, loading, error,
             <SubmitButton disabled={!canSubmit} loading={loading} className="hidden md:inline-flex" />
           </div>
         </div>
+        <EditionPicker value={edition} onChange={onEditionChange} disabled={loading} />
         {/* 휴대폰: 카드 아래 가로 전체 폭 버튼 (시안 6쪽) */}
         <SubmitButton disabled={!canSubmit} loading={loading} className="mt-4 flex w-full md:hidden" />
       </form>
@@ -111,6 +116,43 @@ export default function AnalyzeForm({ value, onChange, onSubmit, loading, error,
         판정과 해설은 팀이 칸트 원문과 대조해 만든 용어 DB만 근거로 합니다.
       </p>
     </div>
+  )
+}
+
+// 역본 힌트 고르기: "모름" + DB의 역본들. 고르면 AI에게 단서로 함께 보낸다 (판정은 여전히 AI가 문맥으로)
+function EditionPicker({ value, onChange, disabled }) {
+  const options = [UNKNOWN_EDITION, ...EDITIONS]
+  return (
+    <fieldset className="mt-4" disabled={disabled}>
+      <legend className="text-label text-ink-2">어느 번역서의 문장인가요? (선택)</legend>
+      <div className="mt-2 flex flex-wrap gap-2">
+        {options.map((option) => {
+          const checked = value === option
+          return (
+            <label
+              key={option}
+              className={
+                'cursor-pointer rounded-full border px-4 py-1.5 text-label transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-brand ' +
+                (checked ? 'border-brand bg-brand-soft text-brand' : 'border-line bg-surface font-normal text-ink-2 hover:border-ink-3')
+              }
+            >
+              <input
+                type="radio"
+                name="edition"
+                value={option}
+                checked={checked}
+                onChange={() => onChange(option)}
+                className="sr-only"
+              />
+              {option === UNKNOWN_EDITION ? '모름' : editionLabel(option)}
+            </label>
+          )
+        })}
+      </div>
+      <p className="mt-2 text-label font-normal text-ink-3">
+        고르면 그 역본의 번역어 대응을 AI에게 단서로 함께 줍니다. 문맥과 어긋나면 AI가 알려 드립니다.
+      </p>
+    </fieldset>
   )
 }
 

@@ -151,6 +151,8 @@ AI 판정 정확도를 재고(7단계) 시연할 때 씁니다. **팀원은 JSON
 ```powershell
 # 방법 1: 터미널에서 바로
 npm run try:analyze -- "모든 인식을 선험적이라고 부른다"
+# 역본 힌트와 함께 (역본 이름은 terms.csv에 적힌 그대로)
+npm run try:analyze -- --역본="백종현,아카넷,2017" "모든 인식을 선험적이라고 부른다"
 
 # 방법 2: 개발 서버를 켠 상태(npm run dev)에서 다른 PowerShell 창으로
 Invoke-RestMethod -Method Post -Uri http://localhost:5173/api/analyze -ContentType "application/json; charset=utf-8" -Body ([Text.Encoding]::UTF8.GetBytes('{"문장":"모든 인식을 선험적이라고 부른다"}')) | ConvertTo-Json -Depth 6
@@ -161,6 +163,7 @@ Invoke-RestMethod -Method Post -Uri http://localhost:5173/api/analyze -ContentTy
 ```json
 {
   "문장": "...",
+  "역본": "백종현,아카넷,2017",
   "개념어목록": [{
     "단어": "선험적",
     "위치": { "시작": 7, "끝": 10 },
@@ -170,10 +173,17 @@ Invoke-RestMethod -Method Post -Uri http://localhost:5173/api/analyze -ContentTy
     "후보원어": ["a priori", "transzendental"],
     "판정이유": "...",
     "해설": "...",
-    "근거": [{ "원어": "transzendental", "역본": "...", "원문위치": "B25" }]
+    "근거": [{ "원어": "transzendental", "역본": "...", "원문위치": "B25" }],
+    "역본기준원어": "a priori",
+    "역본불일치": true
   }]
 }
 ```
+
+- **역본 힌트(선택):** 요청에 `"역본"`을 함께 보내면(`{ "문장": "...", "역본": "백종현,아카넷,2017" }`) 그 역본의 번역어 → 원어 대응을 AI에게 단서로 줍니다. 판정은 여전히 AI가 문맥을 보고 내립니다.
+  - `역본기준원어`: 고른 역본에서 이 번역어가 옮기는 원어 (DB에서 계산. 대응이 없거나 둘 이상이면 `null`)
+  - `역본불일치`: AI 판정이 역본 기준과 다르면 `true` → 화면에 "역본을 잘못 고르지 않았는지 확인" 경고. 이 값도 AI가 아니라 프로그램이 계산합니다.
+  - `역본`을 빼거나 `"모름"`이면 힌트 없이 예전과 똑같이 분석합니다. DB에 없는 역본 이름이면 오류(400)입니다.
 
 - `위치`: 문장의 몇 번째 글자부터 몇 번째 글자 앞까지인지 (0부터 셈). 화면 하이라이트에 씀.
 - 확신도가 "낮음"이거나 AI가 후보가 아닌 원어를 고르면 `판정보류: true`, `판정원어: null`이 되고 `후보원어`를 보여 줍니다.

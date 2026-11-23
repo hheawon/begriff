@@ -4,6 +4,15 @@ import terms from '../../data/terms.json'
 
 export const allTerms = terms
 
+// 역본 목록 (DB에 적힌 그대로, 처음 나온 순서). 문장 분석의 "역본 힌트" 선택지로 쓴다.
+// 서버(server/analyze.js의 EDITIONS)와 같은 방식으로 만든다.
+export const EDITIONS = [...new Set(terms.flatMap((t) => t.번역어목록.map((r) => r.역본)))].filter(Boolean)
+
+// 화면 표시용: "백종현,아카넷,2017" → "백종현, 아카넷, 2017"
+export function editionLabel(역본) {
+  return (역본 ?? '').split(',').map((s) => s.trim()).join(', ')
+}
+
 // 검색 비교용: 앞뒤 공백을 지우고 소문자로 ("A Priori" = "a priori")
 export function normalize(text) {
   return (text ?? '').trim().toLowerCase()

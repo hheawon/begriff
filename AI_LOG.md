@@ -9,3 +9,4 @@
 | 2026-11-22 | Claude Code (Claude Opus 5.5) | AI 문장 분석 API(/api/analyze) 제작: Gemini 공식 SDK(@google/genai, gemini-3.5-flash-lite) 구조화 출력, 용어 DB 근거 프롬프트, 서버 측 검사(위치 계산·판정 보류·DB 출처 자동 첨부), 개발 서버 연결, 테스트 스크립트 |
 | 2026-11-22 | Claude Code (Claude Opus 5.5) | Vercel 환경변수(GEMINI_API_KEY) 등록 안내, 배포 사이트에서 /api/analyze 실제 동작 확인 |
 | 2026-11-23 | Claude Code (Claude Opus 5.5) | 문장 분석 화면 제작: 입력창·예시 문장 3개, /api/analyze 연결(로딩·한국어 에러·30초 제한), 원어별 하이라이트·판정 배지·판정 보류 표시, 판정 이유·해설+대조 카드 펼침, 같은 번역어·다른 원어 경고와 사전 연결, 휴대폰·PC 화면 브라우저 확인 |
+| 2026-11-23 | Claude Code (Claude Opus 5.5) | 문장 분석에 "역본 힌트" 추가: 입력 화면 역본 선택(모름+DB 역본), 고른 역본의 번역어→원어 대응을 AI 지시문에 단서로 전달, DB 기준과 AI 판정이 다르면 "역본 불일치" 경고(프로그램이 계산), 실제 AI·휴대폰 화면 확인 |

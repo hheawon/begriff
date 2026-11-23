@@ -2,8 +2,8 @@
 // 화면(브라우저)은 여기로 문장을 보내고, 분석 결과 JSON을 받는다.
 // API 키는 서버(이 함수)에서만 쓰이고 브라우저로는 절대 가지 않는다.
 //
-// 요청: POST /api/analyze   본문 { "문장": "..." }
-// 응답: 성공 200 { 문장, 개념어목록: [...] } / 실패 { "오류": "한국어 메시지" }
+// 요청: POST /api/analyze   본문 { "문장": "...", "역본": "..." }  (역본은 선택. 없거나 "모름"이면 힌트 없이 분석)
+// 응답: 성공 200 { 문장, 역본, 개념어목록: [...] } / 실패 { "오류": "한국어 메시지" }
 import { analyzeSentence, InputError } from '../server/analyze.js'
 import { LlmConfigError } from '../server/llm.js'
 
@@ -18,7 +18,7 @@ export async function POST(request) {
   }
 
   try {
-    return json(await analyzeSentence(body?.문장))
+    return json(await analyzeSentence(body?.문장, body?.역본))
   } catch (err) {
     if (err instanceof InputError) return json({ 오류: err.message }, 400)
     console.error('[analyze]', err) // 자세한 원인은 서버 기록(Vercel 로그)에만 남긴다
