@@ -1,6 +1,5 @@
 import { josa } from '../lib/terms.js'
 import { termStyle } from '../lib/termStyles.js'
-import TermMarker from './TermMarker.jsx'
 
 // 같은 번역어가 여러 원어를 가리킬 때 띄우는 어두운 경고 상자 (디자인 가이드 3절, 시안 5·9쪽)
 // 앱에서 유일하게 어두운 면을 쓰는 곳 — 이 앱의 핵심 메시지
@@ -61,7 +60,6 @@ export default function OverlapWarning({ 번역어, 원어목록 }) {
               style={{ height: CHIP_H }}
               className={`inline-flex items-center gap-2 rounded-full px-4 font-de text-body font-medium ${termStyle(원어).chip}`}
             >
-              <TermMarker 원어={원어} size={10} />
               {원어}
             </span>
           ))}

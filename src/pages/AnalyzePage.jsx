@@ -6,7 +6,6 @@ import { AnalyzeError, requestAnalysis } from '../lib/analyzeApi.js'
 import AnalyzeForm, { UNKNOWN_EDITION } from '../components/AnalyzeForm.jsx'
 import HighlightedSentence from '../components/HighlightedSentence.jsx'
 import JudgmentDetail, { WarningIcon } from '../components/JudgmentDetail.jsx'
-import TermMarker from '../components/TermMarker.jsx'
 
 // 예시 문장 버튼: test-sentences.json의 앞 3개 문장
 const EXAMPLES = testSentences.slice(0, 3).map((t) => t.문장)
@@ -220,7 +219,6 @@ function FoundTermRow({ item, active, onClick }) {
     >
       <span className="font-read text-h2 font-normal">{item.단어}</span>
       <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-0.5 ${s.chip}`}>
-        <TermMarker 원어={item.판정원어} pending={item.판정보류} size={10} />
         {item.판정보류 ? (
           <span className="text-badge">판정 보류</span>
         ) : (

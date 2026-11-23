@@ -3,7 +3,6 @@ import { allTerms, josa, searchTerms, translationsOf } from '../lib/terms.js'
 import { termStyle } from '../lib/termStyles.js'
 import ContrastCard from '../components/ContrastCard.jsx'
 import OverlapWarning from '../components/OverlapWarning.jsx'
-import TermMarker from '../components/TermMarker.jsx'
 
 // "개념어 사전" 탭 (디자인 가이드 시안 5쪽 데스크톱 · 9쪽 모바일)
 // 데스크톱: 왼쪽 원어 목록 + 오른쪽 대조 카드 / 모바일: 목록 카드를 누르면 그 아래에 펼쳐짐
@@ -167,7 +166,6 @@ function TermListItem({ term, active, expanded, onClick }) {
       }
     >
       <span className="flex items-center gap-2">
-        <TermMarker 원어={term.원어} size={12} />
         <span lang="de" className={`font-de text-h2 font-medium ${s.text}`}>
           {term.원어}
         </span>

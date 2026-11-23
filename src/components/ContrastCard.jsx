@@ -1,6 +1,5 @@
 import { isOverlapping, normalize } from '../lib/terms.js'
 import { termStyle } from '../lib/termStyles.js'
-import TermMarker from './TermMarker.jsx'
 
 const NEED_CHECK = '(확인 필요)'
 
@@ -14,7 +13,6 @@ export default function ContrastCard({ term, query = '' }) {
     <article className={`rounded-2xl border-t-4 bg-surface p-5 shadow-card md:p-8 ${s.topBar}`}>
       <p className="text-label text-ink-3">원어</p>
       <h3 className={`mt-2 flex items-center gap-3 font-de text-term ${s.text}`}>
-        <TermMarker 원어={term.원어} size={22} />
         <span lang="de">{term.원어}</span>
       </h3>
 
@@ -45,7 +43,6 @@ export default function ContrastCard({ term, query = '' }) {
           <ul className="mt-2 space-y-2">
             {term.판단단서.map((단서) => (
               <li key={단서} className="flex gap-2 text-body text-ink-2">
-                <TermMarker 원어={term.원어} size={10} className="mt-2.5" />
                 <span>{단서}</span>
               </li>
             ))}

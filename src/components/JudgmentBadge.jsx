@@ -1,8 +1,7 @@
 import { judgmentStyle } from '../lib/termStyles.js'
-import TermMarker from './TermMarker.jsx'
 
 // 판정 배지 (디자인 가이드 시안 3·4쪽)
-// 판정: "■ → transzendental" / 판정 보류: "◌ 판정 보류 · 후보 transzendental / a priori"
+// 판정: "→ transzendental" / 판정 보류: "판정 보류 · 후보 transzendental / a priori"
 // filled: 선택된 하이라이트의 배지는 채워서 보여준다
 export default function JudgmentBadge({ item, filled = false }) {
   const s = judgmentStyle(item)
@@ -11,7 +10,6 @@ export default function JudgmentBadge({ item, filled = false }) {
     <span
       className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 max-w-full flex-wrap align-middle text-badge ${filled ? s.badgeFilled : s.badge}`}
     >
-      <TermMarker 원어={item.판정원어} pending={item.판정보류} plain={filled} size={10} />
       {item.판정보류 ? (
         <>
           <span className="whitespace-nowrap">판정 보류 · 후보</span>

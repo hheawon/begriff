@@ -1,7 +1,6 @@
 import { allTerms, editionLabel, josa } from '../lib/terms.js'
 import { judgmentStyle } from '../lib/termStyles.js'
 import ContrastCard from './ContrastCard.jsx'
-import TermMarker from './TermMarker.jsx'
 
 // 하이라이트를 누르면 펼쳐지는 영역 (시안 4·8쪽 내용, 위치는 문장 카드 바로 아래)
 // 위: AI의 판정 · 판정 이유 · 해설 / 아래: 3단계의 대조 카드(용어 DB)
@@ -42,7 +41,6 @@ export default function JudgmentDetail({ item, edition = null, onClose, onOpenDi
         {item.판정보류 ? (
           <h3 className={`mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-h2 ${s.text}`}>
             <span className="flex items-center gap-3 whitespace-nowrap">
-              <TermMarker pending size={20} />
               판정 보류
             </span>
             <span className="text-body font-normal text-ink-2">
@@ -52,7 +50,6 @@ export default function JudgmentDetail({ item, edition = null, onClose, onOpenDi
           </h3>
         ) : (
           <h3 className={`mt-2 flex items-center gap-3 font-de text-term ${s.text}`}>
-            <TermMarker 원어={판정원어} size={22} />
             <span lang="de">{판정원어}</span>
           </h3>
         )}

@@ -1,10 +1,9 @@
-// 원어별 색 + 표식 도형 + 밑줄 모양 (디자인 가이드 2절)
+// 원어별 색 + 밑줄 모양 (디자인 가이드 2절). 표식 도형은 팀 결정(2026-11-23)으로 쓰지 않음 — 원어 이름은 배지에 글자로 나온다
 // 색 구별은 "같은 번역어가 갈라지는 원어" 3개에만 쓰고, 나머지 원어는 중립색을 쓴다.
 // Tailwind가 클래스를 찾을 수 있게 클래스 이름은 항상 통째로 적는다 (조각내서 이어 붙이지 않기).
 
 const STYLES = {
   transzendental: {
-    shape: 'square',
     underline: '실선',
     text: 'text-tz-text', //       원어 글자색
     marker: 'text-tz-line', //     표식 도형 색
@@ -20,7 +19,6 @@ const STYLES = {
     badgeFilled: 'border-tz-text bg-tz-text text-white', // 선택된 판정 배지(채움)
   },
   'a priori': {
-    shape: 'circle',
     underline: '이중선',
     text: 'text-ap-text',
     marker: 'text-ap-line',
@@ -35,7 +33,6 @@ const STYLES = {
     badgeFilled: 'border-ap-text bg-ap-text text-white',
   },
   transzendent: {
-    shape: 'triangle',
     underline: '물결선',
     text: 'text-tt-text',
     marker: 'text-tt-line',
@@ -51,9 +48,8 @@ const STYLES = {
   },
 }
 
-// 그 밖의 원어: 중립색(brand-soft + 실선 1px), 표식 도형 없음
+// 그 밖의 원어: 중립색(brand-soft + 실선 1px)
 const NEUTRAL = {
-  shape: null,
   underline: '실선',
   text: 'text-ink',
   marker: 'text-ink-3',
@@ -68,9 +64,8 @@ const NEUTRAL = {
   badgeFilled: 'border-brand bg-brand text-white',
 }
 
-// 판정 보류: 회색 + 점선 밑줄 + 점선 원
+// 판정 보류: 회색 + 점선 밑줄
 export const PENDING = {
-  shape: 'dashed-circle',
   underline: '점선',
   text: 'text-pend-text',
   marker: 'text-pend-line',

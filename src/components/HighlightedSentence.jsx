@@ -1,6 +1,5 @@
 import { COLORED_ORIGINS, PENDING, judgmentStyle, termStyle } from '../lib/termStyles.js'
 import JudgmentBadge from './JudgmentBadge.jsx'
-import TermMarker from './TermMarker.jsx'
 
 // 입력한 문장 카드: 개념어를 원어별 색·밑줄로 하이라이트하고 바로 뒤에 판정 배지를 붙인다 (시안 3·7쪽)
 // items: API의 개념어목록 (위치.시작 순서) / selected: 펼쳐 둔 개념어 번호 / onSelect(번호)
@@ -66,7 +65,7 @@ function TermButton({ text, item, active, onClick }) {
   )
 }
 
-// 범례: 이 문장에 실제로 나온 것만 (색 구별 원어 3개 중 판정된 것 + 판정 보류). 하나도 없으면 범례 없음
+// 범례(원어 · 밑줄 모양): 이 문장에 실제로 나온 것만 (색 구별 원어 3개 중 판정된 것 + 판정 보류). 하나도 없으면 범례 없음
 function Legend({ items }) {
   const shown = COLORED_ORIGINS.filter((원어) => items.some((it) => !it.판정보류 && it.판정원어 === 원어))
   const hasPending = items.some((it) => it.판정보류)
@@ -76,14 +75,12 @@ function Legend({ items }) {
     <ul className="mt-5 flex flex-wrap gap-x-5 gap-y-2 border-t border-line pt-4 text-label font-normal text-ink-2">
       {shown.map((원어) => (
         <li key={원어} className="flex items-center gap-1.5">
-          <TermMarker 원어={원어} size={10} />
           <span lang="de" className={`font-de text-body ${termStyle(원어).text}`}>{원어}</span>
           <span>· {termStyle(원어).underline}</span>
         </li>
       ))}
       {hasPending && (
         <li className="flex items-center gap-1.5">
-          <TermMarker pending size={12} />
           <span>판정 보류 · {PENDING.underline}</span>
         </li>
       )}

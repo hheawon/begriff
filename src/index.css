@@ -16,17 +16,17 @@
   --color-brand-hover: #1f3052;
   --color-brand-soft: #e7ecf4;   /* 선택 배경 · 그 밖의 원어 중립색 */
 
-  /* 2. 원어별 하이라이트 (색 + 밑줄 + 도형을 함께 바꾼다) */
-  --color-tz-bg: #dce8f8;        /* transzendental · 실선 3px · 사각형 */
+  /* 2. 원어별 하이라이트 (색 + 밑줄을 함께 바꾼다. 표식 도형은 팀 결정으로 쓰지 않음) */
+  --color-tz-bg: #dce8f8;        /* transzendental · 실선 3px */
   --color-tz-text: #1d4e89;
   --color-tz-line: #2f6db5;
-  --color-ap-bg: #fde7d3;        /* a priori · 이중선 3px · 원 */
+  --color-ap-bg: #fde7d3;        /* a priori · 이중선 3px */
   --color-ap-text: #8a3b0b;
   --color-ap-line: #d9782c;
-  --color-tt-bg: #f1e0f3;        /* transzendent · 물결선 2px · 삼각형 */
+  --color-tt-bg: #f1e0f3;        /* transzendent · 물결선 2px */
   --color-tt-text: #6b2c73;
   --color-tt-line: #9a4aa3;
-  --color-pend-bg: #ece9e3;      /* 판정 보류 · 점선 3px · 점선 원 */
+  --color-pend-bg: #ece9e3;      /* 판정 보류 · 점선 3px */
   --color-pend-text: #55524c;
   --color-pend-line: #8f8a80;
 
