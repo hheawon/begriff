@@ -7,8 +7,11 @@ import AnalyzeForm, { UNKNOWN_EDITION } from '../components/AnalyzeForm.jsx'
 import HighlightedSentence from '../components/HighlightedSentence.jsx'
 import JudgmentDetail, { WarningIcon } from '../components/JudgmentDetail.jsx'
 
-// 예시 문장 버튼: test-sentences.json의 앞 3개 문장
-const EXAMPLES = testSentences.slice(0, 3).map((t) => t.문장)
+// 예시 문장 버튼: test-sentences.json에서 중복 없이 앞의 문장 3개
+// (한 문장을 개념어별로 여러 줄 적을 수 있어서 중복을 뺀다. 정답이 "판정 보류"인 문장은 보류 예시로 표시)
+const EXAMPLES = [...new Map(testSentences.map((t) => [t.문장, t])).values()]
+  .slice(0, 3)
+  .map((t) => ({ 문장: t.문장, 보류: testSentences.some((s) => s.문장 === t.문장 && s.정답원어 === '판정 보류') }))
 
 // "문장 분석" 탭 (디자인 가이드 시안 2·3·6·7쪽)
 // 입력 화면 → (분석하기) → 결과 화면. 하이라이트를 누르면 문장 카드 아래에 판정·대조 카드가 펼쳐진다.

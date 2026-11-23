@@ -84,8 +84,8 @@ export default function AnalyzeForm({ value, onChange, onSubmit, loading, error,
         <section className="mt-8">
           <h3 className="text-label text-ink-2">예시 문장으로 해 보기</h3>
           <ul className="mt-3 grid gap-3 md:grid-cols-3 md:gap-4">
-            {examples.map((문장, i) => {
-              const short = i === 2 // 3번째 예시: 문맥이 짧아 판정 보류가 나오는 예
+            {examples.map(({ 문장, 보류 }, i) => {
+              const short = 보류 // 정답이 "판정 보류"인 예시: 문맥이 짧아 보류가 나오는 예
               return (
                 <li key={문장}>
                   <button
