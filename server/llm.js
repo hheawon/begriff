@@ -7,7 +7,7 @@ import { GoogleGenAI } from '@google/genai'
 
 // 빠르고 저렴한 정식(Stable) 모델. 2026-11-22 Google 공식 문서 기준.
 // 바꾸고 싶으면 코드를 고치지 않고 환경변수 GEMINI_MODEL로 덮어쓸 수 있다.
-const DEFAULT_MODEL = 'gemini-3.5-flash-lite'
+export const DEFAULT_MODEL ='gemini-3.5-flash-lite'
 
 // 참고: temperature(무작위성) 설정에 대해
 // 공식 문서에 따르면 gemini-3.5 계열은 temperature를 무시하고, 다음 세대부터는 넣으면 오류(400)가 난다.

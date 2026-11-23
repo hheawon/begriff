@@ -25,6 +25,14 @@ for (const term of terms) {
 }
 const TRANSLATIONS = [...candidatesOf.keys()]
 
+// AI가 조사·어미까지 붙여 답한 단어를 DB 번역어로 맞춘다. 예: '선험적으로' → '선험적', '초월적인데' → '초월적'
+// (DB 번역어로 시작하는 단어면 가장 긴 번역어를 고른다. 아니면 null)
+const TRANSLATIONS_LONGEST_FIRST = [...TRANSLATIONS].sort((a, b) => b.length - a.length)
+function toDbWord(word) {
+  if (candidatesOf.has(word)) return word
+  return TRANSLATIONS_LONGEST_FIRST.find((t) => word.startsWith(t)) ?? null
+}
+
 // 역본 목록 (DB에 적힌 그대로). 사용자가 "이 문장은 이 역본에서 왔다"고 고를 수 있다.
 export const EDITIONS = [...new Set(terms.flatMap((t) => t.번역어목록.map((r) => r.역본)))].filter(Boolean)
 
@@ -140,9 +148,9 @@ export function finalize(sentence, aiItems, 역본 = null) {
   }
 
   for (const item of aiItems ?? []) {
-    const 단어 = String(item?.단어 ?? '').trim()
+    const 단어 = toDbWord(String(item?.단어 ?? '').trim())
+    if (!단어) continue // DB에 없는 단어 → 버림
     const 후보원어 = candidatesOf.get(단어)
-    if (!후보원어) continue // DB에 없는 단어 → 버림
     const 시작 = occurrences(sentence, 단어).find((i) => !taken.has(i))
     if (시작 === undefined) continue // 문장에 없는 단어(또는 남는 중복) → 버림
     taken.add(시작)
