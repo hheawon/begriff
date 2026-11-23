@@ -4,7 +4,7 @@ import TermMarker from './TermMarker.jsx'
 
 const NEED_CHECK = '(확인 필요)'
 
-// 대조 카드: 원어 하나의 원문위치 · 해설 · 구별 단서 · 역본별 번역어 (디자인 가이드 시안 5쪽)
+// 대조 카드: 원어 하나의 원문위치 · 해설 · 구별 단서 · 역본별 번역어 (번역어 | 역본) (디자인 가이드 시안 5쪽)
 // query: 지금 검색한 번역어 — 표에서 그 줄을 칠해 준다
 export default function ContrastCard({ term, query = '' }) {
   const s = termStyle(term.원어)
@@ -60,8 +60,7 @@ export default function ContrastCard({ term, query = '' }) {
             <thead>
               <tr className="border-b-2 border-ink text-label text-ink-2">
                 <th scope="col" className="py-2 pr-3">번역어</th>
-                <th scope="col" className="py-2 pr-3">역본</th>
-                <th scope="col" className="py-2 text-right">쪽수</th>
+                <th scope="col" className="py-2">역본</th>
               </tr>
             </thead>
             <tbody>
@@ -78,8 +77,7 @@ export default function ContrastCard({ term, query = '' }) {
                       </span>
                     )}
                   </td>
-                  <td className="py-3 pr-3"><Value text={t.역본} /></td>
-                  <td className="py-3 text-right"><Value text={t.쪽수} /></td>
+                  <td className="py-3"><Value text={t.역본} /></td>
                 </tr>
               ))}
             </tbody>
