@@ -1,5 +1,7 @@
+import { allTerms, isOverlapping } from './terms.js'
+
 // 원어별 색 + 밑줄 모양 (디자인 가이드 2절). 표식 도형은 팀 결정(2026-11-23)으로 쓰지 않음 — 원어 이름은 배지에 글자로 나온다
-// 색 구별은 "같은 번역어가 갈라지는 원어" 3개에만 쓰고, 나머지 원어는 중립색을 쓴다.
+// 색 구별은 "같은 번역어가 갈라지는 원어"에만 쓰고(아래 COLORED_ORIGINS), 나머지 원어는 중립색을 쓴다.
 // Tailwind가 클래스를 찾을 수 있게 클래스 이름은 항상 통째로 적는다 (조각내서 이어 붙이지 않기).
 
 const STYLES = {
@@ -80,11 +82,18 @@ export const PENDING = {
   badgeFilled: 'border-dashed border-pend-text bg-pend-bg text-pend-text',
 }
 
-// 색 구별을 하는 원어 3개 (범례에 쓴다)
-export const COLORED_ORIGINS = Object.keys(STYLES)
+// 색을 받는 원어 = 번역어가 다른 원어와 겹치는 원어 (용어 DB를 보고 자동으로 정한다. 팀 결정 2026-11-23)
+// 예: '선험적'이 a priori와 transzendental 양쪽에 쓰이면 둘 다 색. '초험적'처럼 원어 하나만 가리키면 중립색.
+// 다만 색이 정해진 원어(위 STYLES 3개)만 색을 받는다. 겹치는 원어가 더 생기면 팀이 가이드에 색을 추가해야 한다.
+const overlappingOrigins = allTerms
+  .filter((term) => term.번역어목록.some((row) => isOverlapping(row.번역어)))
+  .map((term) => term.원어)
+
+// 색 구별을 하는 원어 (범례에 쓴다)
+export const COLORED_ORIGINS = Object.keys(STYLES).filter((원어) => overlappingOrigins.includes(원어))
 
 export function termStyle(원어) {
-  return STYLES[원어] ?? NEUTRAL
+  return COLORED_ORIGINS.includes(원어) ? STYLES[원어] : NEUTRAL
 }
 
 // AI 판정 결과 하나의 스타일: 판정 보류면 회색, 아니면 판정한 원어의 색
