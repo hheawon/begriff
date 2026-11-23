@@ -7,10 +7,11 @@ import TermMarker from '../components/TermMarker.jsx'
 
 // "개념어 사전" 탭 (디자인 가이드 시안 5쪽 데스크톱 · 9쪽 모바일)
 // 데스크톱: 왼쪽 원어 목록 + 오른쪽 대조 카드 / 모바일: 목록 카드를 누르면 그 아래에 펼쳐짐
-export default function DictionaryPage() {
-  const [query, setQuery] = useState('')
+// initialQuery: 문장 분석 화면의 "사전에서 보기"로 왔을 때 처음 검색어
+export default function DictionaryPage({ initialQuery = '' }) {
+  const [query, setQuery] = useState(initialQuery)
   const [selected, setSelected] = useState(null) // 사용자가 누른 원어 (없으면 첫 결과)
-  const [collapsed, setCollapsed] = useState(true) // 모바일: 카드가 접혀 있는가
+  const [collapsed, setCollapsed] = useState(initialQuery.trim() === '') // 모바일: 카드가 접혀 있는가
   const inputRef = useRef(null)
 
   const { results, others, overlap } = searchTerms(query)
