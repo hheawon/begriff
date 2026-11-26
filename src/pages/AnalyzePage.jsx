@@ -7,6 +7,8 @@ import { AnalyzeError, requestAnalysis, requestOcr } from '../lib/analyzeApi.js'
 import AnalyzeForm, { UNKNOWN_EDITION } from '../components/AnalyzeForm.jsx'
 import HighlightedSentence from '../components/HighlightedSentence.jsx'
 import JudgmentDetail, { WarningIcon } from '../components/JudgmentDetail.jsx'
+import SentencePicker from '../components/SentencePicker.jsx'
+import { splitSentences } from '../lib/sentences.js'
 
 // 예시 문장 버튼: test-sentences.json에서 중복 없이 앞의 문장 3개 (src/lib/examples.js)
 const EXAMPLES = pickExamples(testSentences)
@@ -25,6 +27,7 @@ export default function AnalyzePage({ onOpenDictionary }) {
   const [photoLoading, setPhotoLoading] = useState(false)
   const [photoError, setPhotoError] = useState('')
   const [fromPhoto, setFromPhoto] = useState(false) // 입력창 글자가 사진에서 읽은 것인가 (확인 안내 표시용)
+  const [photoSentences, setPhotoSentences] = useState(null) // 사진에서 읽은 문장 목록 (고르는 중일 때만)
 
   async function readPhoto(file) {
     if (photoLoading || loading) return
@@ -32,13 +35,24 @@ export default function AnalyzePage({ onOpenDictionary }) {
     setPhotoError('')
     setError('')
     try {
-      setText(await requestOcr(file))
-      setFromPhoto(true)
+      const sentences = splitSentences(await requestOcr(file))
+      if (sentences.length > 1) {
+        setPhotoSentences(sentences) // 여러 문장 → 고르기 카드에서 분석할 문장 고르기
+      } else {
+        insertFromPhoto(sentences.join(' ')) // 한 문장이면 바로 입력창에
+      }
     } catch (err) {
       setPhotoError(err instanceof AnalyzeError ? err.message : '사진을 읽는 중 문제가 생겼습니다. 다시 시도해 주세요.')
     } finally {
       setPhotoLoading(false)
     }
+  }
+
+  // 사진에서 고른 글을 입력창에 넣고 확인 안내를 띄운다
+  function insertFromPhoto(value) {
+    setText(value)
+    setFromPhoto(true)
+    setPhotoSentences(null)
   }
 
   async function analyze() {
@@ -101,6 +115,11 @@ export default function AnalyzePage({ onOpenDictionary }) {
           photoLoading={photoLoading}
           photoError={photoError}
           fromPhoto={fromPhoto}
+          photoPanel={
+            photoSentences && (
+              <SentencePicker sentences={photoSentences} onInsert={insertFromPhoto} onCancel={() => setPhotoSentences(null)} />
+            )
+          }
           error={error}
           examples={EXAMPLES}
           edition={edition}

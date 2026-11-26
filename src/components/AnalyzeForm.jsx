@@ -18,12 +18,14 @@ export default function AnalyzeForm({
   value, onChange, onExample = onChange, onSubmit, loading, error, examples,
   edition = UNKNOWN_EDITION, onEditionChange = () => {},
   onPhoto, photoLoading = false, photoError = '', fromPhoto = false,
+  photoPanel = null, // 사진에서 읽은 문장 고르기 카드 (고르는 중일 때만)
 }) {
   const photoInput = useRef(null)
   const busy = loading || photoLoading
+  const locked = busy || Boolean(photoPanel) // 문장을 고르는 중에는 분석·예시 버튼 잠금
   const length = countChars(value)
   const tooLong = length > MAX_LENGTH
-  const canSubmit = length > 0 && !tooLong && !busy
+  const canSubmit = length > 0 && !tooLong && !locked
   const pickPhoto = () => photoInput.current?.click()
 
   function submit(e) {
@@ -85,11 +87,12 @@ export default function AnalyzeForm({
             </div>
           </div>
         </div>
-        {fromPhoto && !photoLoading && (
+        {photoPanel}
+        {fromPhoto && !photoLoading && !photoPanel && (
           <p role="status" className="mt-3 flex items-start gap-2 rounded-xl bg-brand-soft px-4 py-3 text-body text-ink md:px-5">
             <CameraIcon className="mt-1 text-brand" />
             <span>
-              사진에서 읽은 글자입니다. 틀린 글자가 없는지 확인하고, <strong className="font-semibold">분석할 문장만</strong> 남겨 주세요.
+              사진에서 읽은 문장입니다. <strong className="font-semibold">틀린 글자가 없는지</strong> 확인한 뒤 분석하세요.
               {tooLong && ` (지금 ${length}자 — ${MAX_LENGTH}자 이하로 줄여야 분석할 수 있습니다)`}
             </span>
           </p>
@@ -147,7 +150,7 @@ export default function AnalyzeForm({
                 <li key={문장}>
                   <button
                     type="button"
-                    disabled={busy}
+                    disabled={locked}
                     onClick={() => onExample(문장)}
                     className={
                       'h-full w-full rounded-2xl border p-4 text-left transition-colors hover:border-ink-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:opacity-60 md:p-5 ' +
