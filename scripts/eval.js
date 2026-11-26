@@ -80,7 +80,8 @@ for (const [n, test] of tests.entries()) {
   let row
   try {
     if (!cache.has(key)) {
-      if (cache.size > 0) await sleep(1000)
+      // 배포 주소로 평가할 때는 호출 제한(1분 10번, server/rateLimit.js)에 걸리지 않게 6.5초 간격
+      if (cache.size > 0) await sleep(apiUrl ? 6500 : 1000)
       cache.set(key, await analyzeWithRetry(test.문장, 역본))
     }
     row = { ...test, 역본, ...grade(test, cache.get(key)) }
