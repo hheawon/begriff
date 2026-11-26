@@ -30,22 +30,37 @@ function getClient() {
  * @param {{ system: string, prompt: string, schema: object }} args
  * @returns {Promise<object>} JSON으로 해석된 답
  */
+// AI 서버가 "지금 바쁨"(503·429)이라고 할 때는 잠깐 기다렸다가 다시 부른다.
+// 전체 25초 안에서만 다시 시도한다. (화면은 30초까지 기다린다)
+const DEADLINE_MS = 25_000
+const RETRY_WAIT_MS = [1_500, 3_000] // 1번째·2번째 다시 시도 전에 기다리는 시간
+const isBusy = (err) => /\b(503|429)\b|UNAVAILABLE|RESOURCE_EXHAUSTED/.test(String(err?.message ?? err))
+
 export async function generateJson({ system, prompt, schema }) {
   const ai = getClient()
+  const signal = AbortSignal.timeout(DEADLINE_MS) // 25초 넘게 걸리면 포기
   let response
-  try {
-    response = await ai.models.generateContent({
-      model: process.env.GEMINI_MODEL || DEFAULT_MODEL,
-      contents: prompt,
-      config: {
-        systemInstruction: system,
-        responseMimeType: 'application/json',
-        responseJsonSchema: schema,
-        abortSignal: AbortSignal.timeout(25_000), // 25초 넘게 걸리면 포기
-      },
-    })
-  } catch (err) {
-    throw new LlmCallError(`AI 호출 실패: ${err?.message ?? err}`)
+  for (let attempt = 0; ; attempt++) {
+    try {
+      response = await ai.models.generateContent({
+        model: process.env.GEMINI_MODEL || DEFAULT_MODEL,
+        contents: prompt,
+        config: {
+          systemInstruction: system,
+          responseMimeType: 'application/json',
+          responseJsonSchema: schema,
+          abortSignal: signal,
+        },
+      })
+      break
+    } catch (err) {
+      const wait = RETRY_WAIT_MS[attempt]
+      if (!isBusy(err) || wait === undefined || signal.aborted) {
+        throw new LlmCallError(`AI 호출 실패: ${err?.message ?? err}`)
+      }
+      console.warn(`[llm] AI 서버가 바쁨 → ${wait / 1000}초 뒤 다시 시도 (${attempt + 1}/${RETRY_WAIT_MS.length})`)
+      await new Promise((r) => setTimeout(r, wait))
+    }
   }
 
   const text = response.text

@@ -2,16 +2,14 @@ import { useEffect, useRef, useState } from 'react'
 import testSentences from '../../data/test-sentences.json'
 import { allTerms, editionLabel, josa } from '../lib/terms.js'
 import { judgmentStyle } from '../lib/termStyles.js'
+import { pickExamples } from '../lib/examples.js'
 import { AnalyzeError, requestAnalysis } from '../lib/analyzeApi.js'
 import AnalyzeForm, { UNKNOWN_EDITION } from '../components/AnalyzeForm.jsx'
 import HighlightedSentence from '../components/HighlightedSentence.jsx'
 import JudgmentDetail, { WarningIcon } from '../components/JudgmentDetail.jsx'
 
-// 예시 문장 버튼: test-sentences.json에서 중복 없이 앞의 문장 3개
-// (한 문장을 개념어별로 여러 줄 적을 수 있어서 중복을 뺀다. 정답이 "판정 보류"인 문장은 보류 예시로 표시)
-const EXAMPLES = [...new Map(testSentences.map((t) => [t.문장, t])).values()]
-  .slice(0, 3)
-  .map((t) => ({ 문장: t.문장, 보류: testSentences.some((s) => s.문장 === t.문장 && s.정답원어 === '판정 보류') }))
+// 예시 문장 버튼: test-sentences.json에서 중복 없이 앞의 문장 3개 (src/lib/examples.js)
+const EXAMPLES = pickExamples(testSentences)
 
 // "문장 분석" 탭 (디자인 가이드 시안 2·3·6·7쪽)
 // 입력 화면 → (분석하기) → 결과 화면. 하이라이트를 누르면 문장 카드 아래에 판정·대조 카드가 펼쳐진다.
@@ -100,8 +98,17 @@ function AnalysisResult({ result, selected, onSelect, onClose, onBack, onOpenDic
   }, [selected])
 
   return (
-    <section>
+    <section className="relative">
       <h2 className="sr-only">분석 결과</h2>
+      {/* 시연 백업: 인터넷·AI가 실패해 미리 저장한 결과를 보여줄 때만, 화면 구석에 작게 표시 */}
+      {result.저장된결과 && (
+        <p
+          title="인터넷이나 AI 연결이 안 되어 미리 저장해 둔 분석 결과를 보여줍니다."
+          className="absolute -top-6 right-0 text-label font-normal text-ink-3 md:-top-9"
+        >
+          저장된 결과
+        </p>
+      )}
       <div className="mb-4 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
         <button
           type="button"
