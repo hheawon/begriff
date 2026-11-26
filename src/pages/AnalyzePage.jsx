@@ -3,7 +3,7 @@ import testSentences from '../../data/test-sentences.json'
 import { allTerms, editionLabel, josa } from '../lib/terms.js'
 import { judgmentStyle } from '../lib/termStyles.js'
 import { pickExamples } from '../lib/examples.js'
-import { AnalyzeError, requestAnalysis } from '../lib/analyzeApi.js'
+import { AnalyzeError, requestAnalysis, requestOcr } from '../lib/analyzeApi.js'
 import AnalyzeForm, { UNKNOWN_EDITION } from '../components/AnalyzeForm.jsx'
 import HighlightedSentence from '../components/HighlightedSentence.jsx'
 import JudgmentDetail, { WarningIcon } from '../components/JudgmentDetail.jsx'
@@ -21,6 +21,25 @@ export default function AnalyzePage({ onOpenDictionary }) {
   const [error, setError] = useState('')
   const [result, setResult] = useState(null) // { 문장, 개념어목록 }
   const [selected, setSelected] = useState(null) // 펼친 개념어 번호
+  // 사진 문장 인식 (선택 기능)
+  const [photoLoading, setPhotoLoading] = useState(false)
+  const [photoError, setPhotoError] = useState('')
+  const [fromPhoto, setFromPhoto] = useState(false) // 입력창 글자가 사진에서 읽은 것인가 (확인 안내 표시용)
+
+  async function readPhoto(file) {
+    if (photoLoading || loading) return
+    setPhotoLoading(true)
+    setPhotoError('')
+    setError('')
+    try {
+      setText(await requestOcr(file))
+      setFromPhoto(true)
+    } catch (err) {
+      setPhotoError(err instanceof AnalyzeError ? err.message : '사진을 읽는 중 문제가 생겼습니다. 다시 시도해 주세요.')
+    } finally {
+      setPhotoLoading(false)
+    }
+  }
 
   async function analyze() {
     if (loading) return
@@ -41,6 +60,8 @@ export default function AnalyzePage({ onOpenDictionary }) {
   function changeText(value) {
     setText(value)
     setError('')
+    setPhotoError('')
+    if (!value.trim()) setFromPhoto(false) // 다 지우면 사진 안내도 닫는다
   }
 
   if (result) {
@@ -70,8 +91,16 @@ export default function AnalyzePage({ onOpenDictionary }) {
         <AnalyzeForm
           value={text}
           onChange={changeText}
+          onExample={(문장) => {
+            changeText(문장)
+            setFromPhoto(false)
+          }}
           onSubmit={analyze}
           loading={loading}
+          onPhoto={readPhoto}
+          photoLoading={photoLoading}
+          photoError={photoError}
+          fromPhoto={fromPhoto}
           error={error}
           examples={EXAMPLES}
           edition={edition}

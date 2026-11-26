@@ -1,3 +1,4 @@
+import { useRef } from 'react'
 import { EDITIONS, editionLabel } from '../lib/terms.js'
 import { WarningIcon } from './JudgmentDetail.jsx'
 
@@ -12,10 +13,18 @@ function countChars(text) {
 
 // 문장 입력 카드 + 예시 문장 (디자인 가이드 시안 2·6쪽)
 // edition: 고른 역본 힌트 ('모름'이면 힌트 없음)
-export default function AnalyzeForm({ value, onChange, onSubmit, loading, error, examples, edition = UNKNOWN_EDITION, onEditionChange = () => {} }) {
+// onPhoto(file): "사진으로 입력"으로 고른 사진 (선택 기능). photoLoading: 읽는 중, fromPhoto: 입력창 글자가 사진에서 왔음
+export default function AnalyzeForm({
+  value, onChange, onExample = onChange, onSubmit, loading, error, examples,
+  edition = UNKNOWN_EDITION, onEditionChange = () => {},
+  onPhoto, photoLoading = false, photoError = '', fromPhoto = false,
+}) {
+  const photoInput = useRef(null)
+  const busy = loading || photoLoading
   const length = countChars(value)
   const tooLong = length > MAX_LENGTH
-  const canSubmit = length > 0 && !tooLong && !loading
+  const canSubmit = length > 0 && !tooLong && !busy
+  const pickPhoto = () => photoInput.current?.click()
 
   function submit(e) {
     e.preventDefault()
@@ -24,7 +33,7 @@ export default function AnalyzeForm({ value, onChange, onSubmit, loading, error,
 
   return (
     <div>
-      <form onSubmit={submit} aria-busy={loading}>
+      <form onSubmit={submit} aria-busy={busy}>
         <div className="rounded-2xl border border-line bg-surface focus-within:border-brand focus-within:ring-2 focus-within:ring-brand-soft">
           <label htmlFor="sentence-input" className="block px-5 pt-4 text-label text-ink md:px-6">
             번역 문장
@@ -37,30 +46,78 @@ export default function AnalyzeForm({ value, onChange, onSubmit, loading, error,
               // Ctrl(⌘) + Enter로도 분석
               if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) submit(e)
             }}
-            readOnly={loading}
+            readOnly={busy}
             rows={5}
             placeholder="예: 수학적 판단은 모두 선험적 종합판단이다."
             aria-describedby="sentence-count"
             className="block min-h-40 w-full resize-y bg-transparent px-5 py-3 font-read text-h2 font-normal text-ink outline-none placeholder:text-ink-3 md:min-h-48 md:px-6"
           />
-          <div className="flex items-center justify-end gap-4 border-t border-line px-5 py-3 md:px-4">
-            <span
-              id="sentence-count"
-              className={`text-label ${tooLong ? 'text-ap-text' : 'font-normal text-ink-3'}`}
-            >
-              {length} / {MAX_LENGTH}자{tooLong && ' · 너무 깁니다'}
-            </span>
-            <SubmitButton disabled={!canSubmit} loading={loading} className="hidden md:inline-flex" />
+          <div className="flex items-center justify-between gap-4 border-t border-line px-5 py-3 md:px-4">
+            {/* 사진으로 입력 (시안 2·6쪽: 카드 아래 줄 왼쪽) */}
+            {onPhoto ? (
+              <>
+                <input
+                  ref={photoInput}
+                  type="file"
+                  accept="image/*"
+                  className="sr-only"
+                  tabIndex={-1}
+                  aria-hidden="true"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    e.target.value = '' // 같은 사진을 다시 골라도 동작하게
+                    if (file) onPhoto(file)
+                  }}
+                />
+                <PhotoButton onClick={pickPhoto} loading={photoLoading} disabled={busy} />
+              </>
+            ) : (
+              <span />
+            )}
+            <div className="flex items-center gap-4">
+              <span
+                id="sentence-count"
+                className={`text-label ${tooLong ? 'text-ap-text' : 'font-normal text-ink-3'}`}
+              >
+                {length} / {MAX_LENGTH}자{tooLong && ' · 너무 깁니다'}
+              </span>
+              <SubmitButton disabled={!canSubmit} loading={loading} className="hidden md:inline-flex" />
+            </div>
           </div>
         </div>
-        <EditionPicker value={edition} onChange={onEditionChange} disabled={loading} />
+        {fromPhoto && !photoLoading && (
+          <p role="status" className="mt-3 flex items-start gap-2 rounded-xl bg-brand-soft px-4 py-3 text-body text-ink md:px-5">
+            <CameraIcon className="mt-1 text-brand" />
+            <span>
+              사진에서 읽은 글자입니다. 틀린 글자가 없는지 확인하고, <strong className="font-semibold">분석할 문장만</strong> 남겨 주세요.
+              {tooLong && ` (지금 ${length}자 — ${MAX_LENGTH}자 이하로 줄여야 분석할 수 있습니다)`}
+            </span>
+          </p>
+        )}
+        {photoError && (
+          <div role="alert" className="mt-3 flex flex-col gap-3 rounded-xl border border-ink-3 bg-surface p-4 md:flex-row md:items-center md:justify-between md:px-5">
+            <p className="flex items-start gap-2 text-body text-ink">
+              <WarningIcon className="mt-1 text-ap-line" />
+              <span>{photoError}</span>
+            </p>
+            <button
+              type="button"
+              onClick={pickPhoto}
+              disabled={busy}
+              className="self-start rounded-xl border border-brand px-4 py-2 text-label whitespace-nowrap text-brand hover:bg-brand-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:opacity-50 md:self-auto"
+            >
+              다른 사진 고르기
+            </button>
+          </div>
+        )}
+        <EditionPicker value={edition} onChange={onEditionChange} disabled={busy} />
         {/* 휴대폰: 카드 아래 가로 전체 폭 버튼 (시안 6쪽) */}
         <SubmitButton disabled={!canSubmit} loading={loading} className="mt-4 flex w-full md:hidden" />
       </form>
 
       {/* 분석 중 안내 (화면 낭독기용) */}
       <p className="sr-only" aria-live="polite">
-        {loading ? 'AI가 문장을 분석하고 있습니다.' : ''}
+        {loading ? 'AI가 문장을 분석하고 있습니다.' : photoLoading ? '사진에서 글자를 읽고 있습니다.' : ''}
       </p>
 
       {error && (
@@ -90,8 +147,8 @@ export default function AnalyzeForm({ value, onChange, onSubmit, loading, error,
                 <li key={문장}>
                   <button
                     type="button"
-                    disabled={loading}
-                    onClick={() => onChange(문장)}
+                    disabled={busy}
+                    onClick={() => onExample(문장)}
                     className={
                       'h-full w-full rounded-2xl border p-4 text-left transition-colors hover:border-ink-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:opacity-60 md:p-5 ' +
                       (short ? 'border-dashed ' : '') +
@@ -185,6 +242,40 @@ function Spinner() {
     <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" className="animate-spin">
       <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="3" opacity="0.3" />
       <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+// "책 사진으로 입력"(PC) / "사진으로 입력"(휴대폰) — 기존 텍스트 버튼("다른 문장 분석")과 같은 모양
+function PhotoButton({ onClick, loading, disabled }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className="inline-flex items-center gap-2 rounded-lg py-1 text-label text-brand hover:text-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      {loading ? (
+        <>
+          <Spinner />
+          사진 읽는 중…
+        </>
+      ) : (
+        <>
+          <CameraIcon />
+          <span className="md:hidden">사진으로 입력</span>
+          <span className="hidden md:inline">책 사진으로 입력</span>
+        </>
+      )}
+    </button>
+  )
+}
+
+function CameraIcon({ className = '' }) {
+  return (
+    <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`shrink-0 ${className}`}>
+      <path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z" />
+      <circle cx="12" cy="13.5" r="3.5" />
     </svg>
   )
 }

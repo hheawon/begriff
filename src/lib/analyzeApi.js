@@ -26,22 +26,61 @@ function savedResult(문장, 역본) {
 export async function requestAnalysis(문장, 역본 = null) {
   const saved = savedResult(문장, 역본)
   try {
-    return await requestLive(문장, 역본, saved ? TIMEOUT_SAVED_MS : TIMEOUT_MS)
+    const data = await postJson('/api/analyze', { 문장, 역본 }, saved ? TIMEOUT_SAVED_MS : TIMEOUT_MS)
+    if (typeof data?.문장 !== 'string' || !Array.isArray(data?.개념어목록)) throw new AnalyzeError(MSG_FALLBACK)
+    return data
   } catch (err) {
     if (saved && !(err instanceof InputRejected)) return saved
     throw err
   }
 }
 
-async function requestLive(문장, 역본, timeoutMs) {
+// ── 사진 문장 인식 (선택 기능) ─────────────────────────────
+const PHOTO_MAX_SIDE = 1600 // 긴 변을 이 크기로 줄여 보낸다 (휴대폰 원본 사진은 너무 큼)
+const MSG_PHOTO_OPEN = '이 사진을 열 수 없습니다. JPG나 PNG 사진으로 다시 골라 주세요.'
+const MSG_PHOTO_EMPTY = '사진에서 글자를 읽지 못했습니다. 글자가 크고 또렷하게 나오도록 다시 찍어 주세요.'
+
+// 책 사진(File) → 읽은 글자(string). 문제가 있으면 한국어 메시지가 담긴 AnalyzeError
+export async function requestOcr(file) {
+  if (!file?.type?.startsWith('image/')) throw new AnalyzeError('사진 파일만 고를 수 있습니다.')
+  const 이미지 = await shrinkToJpeg(file)
+  const data = await postJson('/api/ocr', { 이미지, 형식: 'image/jpeg' }, TIMEOUT_MS)
+  const 텍스트 = typeof data?.텍스트 === 'string' ? data.텍스트.trim() : ''
+  if (!텍스트) throw new AnalyzeError(MSG_PHOTO_EMPTY)
+  return 텍스트
+}
+
+// 사진을 긴 변 1600px JPEG로 줄여 base64 글자로 (휴대폰 사진의 회전 정보도 반영)
+async function shrinkToJpeg(file) {
+  let bitmap
+  try {
+    bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' })
+  } catch {
+    throw new AnalyzeError(MSG_PHOTO_OPEN)
+  }
+  const scale = Math.min(1, PHOTO_MAX_SIDE / Math.max(bitmap.width, bitmap.height))
+  const canvas = document.createElement('canvas')
+  canvas.width = Math.round(bitmap.width * scale)
+  canvas.height = Math.round(bitmap.height * scale)
+  const ctx = canvas.getContext('2d')
+  ctx.fillStyle = '#fff' // 투명한 PNG도 흰 바탕으로
+  ctx.fillRect(0, 0, canvas.width, canvas.height)
+  ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height)
+  bitmap.close?.()
+  return canvas.toDataURL('image/jpeg', 0.85).split(',')[1]
+}
+
+// ── 서버에 JSON 보내기 (분석·사진 공통) ─────────────────────────────
+// 성공하면 서버 답(JSON)을, 실패하면 한국어 메시지의 AnalyzeError(입력 오류는 InputRejected)를 던진다.
+async function postJson(path, body, timeoutMs) {
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), timeoutMs)
 
   try {
-    const response = await fetch('/api/analyze', {
+    const response = await fetch(path, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 문장, 역본 }),
+      body: JSON.stringify(body),
       signal: controller.signal,
     })
 
@@ -56,9 +95,7 @@ async function requestLive(문장, 역본, timeoutMs) {
     // 서버가 준 한국어 오류 문구가 있으면 그대로 보여준다
     if (response.status === 400) throw new InputRejected(data?.오류 || MSG_FALLBACK)
     if (!response.ok) throw new AnalyzeError(data?.오류 || MSG_FALLBACK)
-    if (typeof data?.문장 !== 'string' || !Array.isArray(data?.개념어목록)) {
-      throw new AnalyzeError(MSG_FALLBACK)
-    }
+    if (!data) throw new AnalyzeError(MSG_FALLBACK)
     return data
   } catch (err) {
     if (err instanceof AnalyzeError) throw err
