@@ -1,4 +1,4 @@
-import { isOverlapping, normalize } from '../lib/terms.js'
+import { editionLabel, isOverlapping, normalize } from '../lib/terms.js'
 import { termStyle } from '../lib/termStyles.js'
 
 const NEED_CHECK = '(확인 필요)'
@@ -53,7 +53,7 @@ export default function ContrastCard({ term, query = '' }) {
       <section className="mt-6">
         <h4 className="text-label text-ink">역본별 번역어</h4>
         <div className="mt-2 overflow-x-auto">
-          <table className="w-full min-w-[320px] border-collapse text-left text-body">
+          <table className="w-full border-collapse text-left text-body">
             <thead>
               <tr className="border-b-2 border-ink text-label text-ink-2">
                 <th scope="col" className="py-2 pr-3">번역어</th>
@@ -74,7 +74,8 @@ export default function ContrastCard({ term, query = '' }) {
                       </span>
                     )}
                   </td>
-                  <td className="py-3"><Value text={t.역본} /></td>
+                  {/* "최재희, 동아출판사, 1969"처럼 띄어 써서 휴대폰에서 줄이 바뀌게 */}
+                  <td className="py-3"><Value text={t.역본 && editionLabel(t.역본)} /></td>
                 </tr>
               ))}
             </tbody>

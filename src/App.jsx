@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import Header from './components/Header.jsx'
+import ErrorBoundary from './components/ErrorBoundary.jsx'
 import AnalyzePage from './pages/AnalyzePage.jsx'
 import DictionaryPage from './pages/DictionaryPage.jsx'
 
@@ -28,11 +29,14 @@ export default function App() {
       <main className="mx-auto max-w-[1200px] px-5 py-8 md:px-12 md:py-12">
         {TABS.map(({ id }) => (
           <div key={id} id={`panel-${id}`} role="tabpanel" aria-labelledby={`tab-${id}`} hidden={tab !== id}>
-            {id === 'analyze' ? (
-              <AnalyzePage onOpenDictionary={openDictionary} />
-            ) : (
-              <DictionaryPage key={dictionaryQuery.count} initialQuery={dictionaryQuery.text} />
-            )}
+            {/* 한 탭에서 오류가 나도 다른 탭과 머리말은 그대로 쓸 수 있게 탭마다 안전망 */}
+            <ErrorBoundary>
+              {id === 'analyze' ? (
+                <AnalyzePage onOpenDictionary={openDictionary} />
+              ) : (
+                <DictionaryPage key={dictionaryQuery.count} initialQuery={dictionaryQuery.text} />
+              )}
+            </ErrorBoundary>
           </div>
         ))}
       </main>

@@ -135,9 +135,8 @@ function occurrences(sentence, word) {
   return found
 }
 
-// (테스트·정확도 평가에서도 쓰도록 export)
 // 역본: 사용자가 고른 역본 (없으면 null). 역본 기준 원어와 불일치 여부는 AI가 아니라 여기서 DB로 계산한다.
-export function finalize(sentence, aiItems, 역본 = null) {
+function finalize(sentence, aiItems, 역본 = null) {
   const taken = new Set() // 이미 배정된 시작 위치 (같은 단어가 두 번 나올 때 차례로 배정)
   const result = []
   const mapping = 역본 ? mappingOf(역본) : null

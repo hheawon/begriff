@@ -3,10 +3,10 @@ import { WarningIcon } from './JudgmentDetail.jsx'
 
 export const UNKNOWN_EDITION = '모름'
 
-export const MAX_LENGTH = 500 // 서버(server/analyze.js)와 같은 글자 수 제한
+const MAX_LENGTH = 500 // 서버(server/analyze.js)와 같은 글자 수 제한
 
 // 글자 수: 서버와 똑같이 앞뒤 공백을 빼고, 한글·이모지도 한 글자로 센다
-export function countChars(text) {
+function countChars(text) {
   return [...text.trim()].length
 }
 

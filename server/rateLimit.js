@@ -3,8 +3,8 @@
 //
 // ※ "간단한" 제한이다. 기록을 서버 메모리에만 두므로, Vercel이 서버를 여러 대 띄우거나
 //    서버가 다시 시작되면 횟수가 따로 세어지거나 초기화된다. 공모전 시연 규모에서는 충분하다.
-export const LIMIT = 10
-export const WINDOW_MS = 60_000
+const LIMIT = 10
+const WINDOW_MS = 60_000
 
 const hits = new Map() // IP → 최근 호출 시각 목록
 
