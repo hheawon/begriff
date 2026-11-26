@@ -4,18 +4,19 @@ import tailwindcss from '@tailwindcss/vite'
 
 // 개발용: `npm run dev` 중에도 /api/analyze, /api/ocr가 동작하게 연결한다.
 // (배포된 사이트에서는 Vercel이 api/ 폴더의 파일을 직접 실행하므로 이 부분은 쓰이지 않는다)
+// Vite의 ssrLoadModule로 불러오므로 server/·api/ 파일을 고치면 서버를 다시 켜지 않아도 바로 반영된다.
 const DEV_APIS = {
-  '/api/analyze': () => import('./api/analyze.js'),
-  '/api/ocr': () => import('./api/ocr.js'),
+  '/api/analyze': '/api/analyze.js',
+  '/api/ocr': '/api/ocr.js',
 }
 
 function devApi() {
   return {
     name: 'begriff-dev-api',
     configureServer(server) {
-      for (const [path, load] of Object.entries(DEV_APIS)) server.middlewares.use(path, async (req, res) => {
+      for (const [path, file] of Object.entries(DEV_APIS)) server.middlewares.use(path, async (req, res) => {
         try {
-          const api = await load()
+          const api = await server.ssrLoadModule(file)
           const handler = api[req.method]
           if (!handler) {
             res.statusCode = 405
