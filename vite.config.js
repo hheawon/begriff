@@ -2,15 +2,20 @@ import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
-// 개발용: `npm run dev` 중에도 /api/analyze가 동작하게 연결한다.
-// (배포된 사이트에서는 Vercel이 api/analyze.js를 직접 실행하므로 이 부분은 쓰이지 않는다)
+// 개발용: `npm run dev` 중에도 /api/analyze, /api/ocr가 동작하게 연결한다.
+// (배포된 사이트에서는 Vercel이 api/ 폴더의 파일을 직접 실행하므로 이 부분은 쓰이지 않는다)
+const DEV_APIS = {
+  '/api/analyze': () => import('./api/analyze.js'),
+  '/api/ocr': () => import('./api/ocr.js'),
+}
+
 function devApi() {
   return {
     name: 'begriff-dev-api',
     configureServer(server) {
-      server.middlewares.use('/api/analyze', async (req, res) => {
+      for (const [path, load] of Object.entries(DEV_APIS)) server.middlewares.use(path, async (req, res) => {
         try {
-          const api = await import('./api/analyze.js')
+          const api = await load()
           const handler = api[req.method]
           if (!handler) {
             res.statusCode = 405
